@@ -12,15 +12,20 @@ const __dirname = path.dirname(__filename);
 import {registerValidator, loginValidator} from "./validations/auth.js"
 import {hallValidator} from "./validations/hallValid.js"
 import {showValidator} from "./validations/showValid.js";
+import {performanceValidator} from "./validations/performanceValid.js";
 import {checkAdmin, checkHead, checkUser, checkAuth, checkAdministration} from "./validations/checkAuth.js"
 
 import {register, profile, login, removeRrofile, updateProfile} from "./controllers/userController.js"
 import {createHall, getAllHalls, getHallById, updateHall, removeHall} from "./controllers/hallController.js"
 import {createShow, removeShow, updateShow, getShowById, getAllShows } from "./controllers/showController.js";
+import {createPerformance, getScheduleByDate, getSlotsByDateByShow} from "./controllers/performanceController.js";
+import {bookTicket, unbookTicket} from "./controllers/ticketController.js";
 
 import User from "./models/User.js"
 import Hall from "./models/Hall.js"
-import Show from "./models/Show.js";
+import Show from "./models/Show.js"
+import Ticket from "./models/Ticket.js";
+import Performance from "./models/Performance.js";
 
 mongoose.connect(
     `mongodb+srv://admin:ihatekpi@cluster0.nu2roiy.mongodb.net/theater?retryWrites=true&w=majority`).then(
@@ -32,7 +37,7 @@ mongoose.connect(
 const app = express();
 app.use(cors());
 
-process.env.TZ = "Europe/Kyiv";
+process.env.TZ = "Europe/Greenwich";
 console.log(new Date().toString());
 
 const storage = multer.diskStorage({
@@ -88,6 +93,17 @@ app.get("/show/all", checkAdministration, getAllShows)
 app.get("/show/:id", checkAdministration, getShowById)
 app.patch("/show/update/:id", checkAdministration, showValidator, updateShow)
 app.delete("/show/delete/:id", checkAdministration, removeShow)
+
+
+//performance + tickets
+app.post("/performance/create", checkAdministration, performanceValidator, createPerformance)
+app.put("/ticket/book/:id", checkUser, bookTicket)
+app.put("/ticket/unbook/:id", checkUser, bookTicket)
+
+//schedule
+app.post("/schedule", checkAuth, getScheduleByDate)
+app.post("/slots", checkAdministration, getSlotsByDateByShow)
+
 
 
 app.listen(process.env.PORT || 5000, (err) => {
