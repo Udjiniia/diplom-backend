@@ -123,3 +123,29 @@ export const checkAdministration = (req, res, next) => {
     }
 }
 
+export const checkWorker = (req, res, next) => {
+    const token = (req.headers.authorization || "Empty").replace(/Bearer\s?/, "");
+    if (token) {
+        try {
+            const decodedToken = jwt.verify(token, 'diplom');
+            if (decodedToken.role === "worker") {
+                req.userId = decodedToken._id;
+                req.userRole = decodedToken.role
+                next();
+            } else {
+                return res.status(403).json({
+                    message: "Not authorized"
+                })
+            }
+        } catch (err) {
+            res.status(403).json({
+                message: "Not authorized"
+            })
+        }
+    } else {
+        return res.status(403).json({
+            message: "Not authorized"
+        })
+    }
+}
+

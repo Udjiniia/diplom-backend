@@ -13,19 +13,21 @@ import {registerValidator, loginValidator} from "./validations/auth.js"
 import {hallValidator} from "./validations/hallValid.js"
 import {showValidator} from "./validations/showValid.js";
 import {performanceValidator} from "./validations/performanceValid.js";
-import {checkAdmin, checkHead, checkUser, checkAuth, checkAdministration} from "./validations/checkAuth.js"
+import {checkAdmin, checkHead, checkUser, checkAuth, checkAdministration,checkWorker} from "./validations/checkAuth.js"
 
 import {register, profile, login, removeRrofile, updateProfile} from "./controllers/userController.js"
 import {createHall, getAllHalls, getHallById, updateHall, removeHall} from "./controllers/hallController.js"
 import {createShow, removeShow, updateShow, getShowById, getAllShows } from "./controllers/showController.js";
-import {createPerformance, getScheduleByDate, getSlotsByDateByShow} from "./controllers/performanceController.js";
-import {bookTicket, unbookTicket} from "./controllers/ticketController.js";
+import {createPerformance, getScheduleByDate, getSlotsByDateByShow, getCheckedForReplacementByShow, getReplacementSlots} from "./controllers/performanceController.js";
+import {bookTicket, unbookTicket,buyTicket} from "./controllers/ticketController.js";
+import {getScheduleForWorker, checkWorkerAvailability} from "./controllers/workSessionController.js"
 
 import User from "./models/User.js"
 import Hall from "./models/Hall.js"
 import Show from "./models/Show.js"
 import Ticket from "./models/Ticket.js";
 import Performance from "./models/Performance.js";
+import WorkSession from "./models/WorkSession.js";
 
 mongoose.connect(
     `mongodb+srv://admin:ihatekpi@cluster0.nu2roiy.mongodb.net/theater?retryWrites=true&w=majority`).then(
@@ -98,12 +100,16 @@ app.delete("/show/delete/:id", checkAdministration, removeShow)
 //performance + tickets
 app.post("/performance/create", checkAdministration, performanceValidator, createPerformance)
 app.put("/ticket/book/:id", checkUser, bookTicket)
-app.put("/ticket/unbook/:id", checkUser, bookTicket)
+app.put("/ticket/unbook/:id", checkUser, unbookTicket)
+app.put("/ticket/buy/:id", checkUser, buyTicket)
+app.post("/performance/replace/:id", checkAdministration, getCheckedForReplacementByShow)
+app.post("/performance/replaceSlots", checkAdministration, getReplacementSlots)
 
 //schedule
 app.post("/schedule", checkAuth, getScheduleByDate)
 app.post("/slots", checkAdministration, getSlotsByDateByShow)
-
+app.post("/mySchedule", checkWorker, getScheduleForWorker)
+app.post("/workerAvailable", checkAdministration, checkWorkerAvailability)
 
 
 app.listen(process.env.PORT || 5000, (err) => {

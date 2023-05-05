@@ -13,7 +13,6 @@ export const register = async (req, res) => {
 
         const passwordUnhashed = req.body.password;
         const salt = await bcrypt.genSalt(10);
-        console.log(req.body)
         const passwordHash = await bcrypt.hash(passwordUnhashed, salt);
 
         const doc = new User({
@@ -22,7 +21,7 @@ export const register = async (req, res) => {
             userRole: req.body.role,
             firstName: req.body.firstName,
             lastName: req.body.lastName,
-            birthday: req.body.birthday,
+            birthday: new Date(req.body.birthday),
             phone: req.body.phone,
             avatarUrl: req.body.avatarUrl,
         })
@@ -36,7 +35,7 @@ export const register = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({
-                message: "Registration failed, try another email"
+                message: "Registration failed, try another email or phone"
             }
         )
     }

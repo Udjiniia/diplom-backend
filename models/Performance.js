@@ -9,6 +9,14 @@ const PerformanceSchema = new mongoose.Schema({
             type: Date,
             required: true,
         },
+        performanceWorkTime: {
+            type: Date,
+            required: true,
+        },
+        performanceWorkEndTime: {
+            type: Date,
+            required: true,
+        },
         details: {
             type: String,
         },

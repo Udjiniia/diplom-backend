@@ -1,9 +1,11 @@
-import {validationResult} from "express-validator";
+import {check, validationResult} from "express-validator";
 import Performance from "../models/Performance.js";
 import Show from "../models/Show.js";
 import Hall from "../models/Hall.js";
-import {createTickets} from "./ticketController.js";
-import {getPerformancesByDate, getTimeForShowByDate} from "../services/performanceService.js"
+import {createTickets, checkTicketAvailability} from "../services/ticketService.js";
+import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot} from "../services/performanceService.js"
+import {createWorkSessionForPerformance} from "../services/workSessionService.js";
+import show from "../models/Show.js";
 
 export const createPerformance = async (req, res) => {
     try {
@@ -15,22 +17,14 @@ export const createPerformance = async (req, res) => {
         const show = await Show.findOne({name: req.body.showName, author: req.body.showAuthor})
         const hall = await Hall.findOne({name: req.body.hallName})
 
-        const endTime = new Date(req.body.performanceTime)
-        endTime.setHours(show.duration.getHours() + endTime.getHours())
-        endTime.setMinutes(show.duration.getMinutes() + endTime.getMinutes())
-        const doc = new Performance({
-            performanceTime: req.body.performanceTime,
-            details: req.body.details,
-            creator: req.userId,
-            show: show,
-            hall: hall,
-            performanceAvatarUrl: req.body.performanceAvatarUrl,
-            performanceEndTime: endTime
-        })
-
-        const performance = await doc.save();
+        const performance = await createPerformanceWithTicketsAndSession(show, hall, req.body.performanceTime,
+            req.body.details, req.userId, req.body.performanceAvatarUrl)
 
         await createTickets(performance, hall, req.body.prices)
+
+        for (const s of req.body.session) {
+            await createWorkSessionForPerformance(s[0], performance._id, s[1], s[2])
+        }
 
         res.json(performance);
 
@@ -155,7 +149,7 @@ export const getSlotsByDateByShow = async (req, res) => {
 
         const show = await Show.findById(req.body.showId)
 
-        const schedule = await getTimeForShowByDate(new Date(req.body.date),show)
+        const schedule = await getTimeForShowByDate(new Date(req.body.date), show, req.body.interval)
 
         res.json(schedule);
 
@@ -163,6 +157,49 @@ export const getSlotsByDateByShow = async (req, res) => {
         console.log(err);
         res.status(500).json({
                 message: "Couldn`t get the slots for this date"
+            }
+        )
+    }
+};
+
+export const getCheckedForReplacementByShow = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array());
+        }
+
+        const performance = await Performance.findById(req.params.id)
+        const performance2 = await Performance.findById(req.body.performance)
+
+        const available = await checkTicketAvailability(performance._id, performance2._id)
+
+        res.json(available);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+                message: "Couldn`t get the performances "
+            }
+        )
+    }
+};
+
+export const getReplacementSlots = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array());
+        }
+
+        const schedule = await findPerformanceSlot(req.body.performanceId, new Date(req.body.date))
+
+        res.json(schedule);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+                message: "Couldn`t get the slots "
             }
         )
     }
