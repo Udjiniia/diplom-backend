@@ -1,6 +1,5 @@
 import {validationResult} from "express-validator";
-import Hall from "../models/Hall.js";
-
+import {createNewHall, getHalls, getHall, updateHallById, deleteHall} from "../services/hallService.js";
 
 
 export const createHall = async (req, res) => {
@@ -10,15 +9,7 @@ export const createHall = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const doc = new Hall({
-            name: req.body.name,
-            rows: req.body.rows,
-            capacity: req.body.capacity,
-            details: req.body.details,
-            creator: req.userId,
-        })
-
-        const hall = await doc.save();
+        const hall = await createNewHall(req.body.name, req.body.rows, req.body.capacity, req.body.details, req.userId,)
 
         res.json(hall);
 
@@ -38,7 +29,7 @@ export const getAllHalls = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const halls = await Hall.find()
+        const halls = await getHalls()
 
         if (halls.length === 0) {
             return res.status(404).json({
@@ -63,7 +54,7 @@ export const getHallById = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const hall = await Hall.findOne({_id: req.params.id})
+        const hall = await getHall(req.params.id)
 
         if (!hall) {
             return res.status(404).json({
@@ -89,17 +80,7 @@ export const updateHall = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        await Hall.findOneAndUpdate({
-                _id: req.params.id,
-            },
-            {
-                name: req.body.name,
-                rows: req.body.rows,
-                capacity: req.body.capacity,
-                details: req.body.details,
-            })
-
-        const hall = await Hall.findById(req.params.id)
+        const hall = await updateHallById(req.body.name, req.body.rows, req.body.capacity, req.body.details, req.body.status, req.params.id)
 
         res.json(hall);
 
@@ -113,33 +94,13 @@ export const updateHall = async (req, res) => {
 };
 export const removeHall = async (req, res) => {
     try {
-        Hall.findOneAndDelete(
-            {
-                _id: req.params.id,
-            },
-            (err, doc) => {
-                if (err) {
-                    console.log(err);
-                    return res.status(404).json({
-                        message: 'Couldn`t delete hall ',
-                    });
-                }
-
-                if (!doc) {
-                    return res.status(404).json({
-                        message: 'No such hall',
-                    });
-                }
-
-                res.json({
-                    success: true,
-                });
-            },
-        );
+        const resp = await deleteHall(req.params.id)
+        res.json(resp)
     } catch (err) {
         console.log(err);
         res.status(403).json({
             message: 'Could not delete hall',
         });
     }
+
 }

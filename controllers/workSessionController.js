@@ -1,6 +1,6 @@
 import {validationResult} from "express-validator";
 import {getWorkerScheduleByDate, getWorkerStatusByTime} from "../services/workSessionService.js";
-import Performance from "../models/Performance.js";
+
 
 export const getScheduleForWorker = async (req, res) => {
     try {

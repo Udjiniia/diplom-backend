@@ -1,6 +1,5 @@
 import {validationResult} from "express-validator";
-import Show from "../models/Show.js";
-
+import {createNewShow, getShow, getShows, deleteShow, updateShowById} from "../services/showService.js";
 
 
 export const createShow = async (req, res) => {
@@ -10,17 +9,7 @@ export const createShow = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const doc = new Show({
-            name: req.body.name,
-            author: req.body.author,
-            duration: req.body.duration,
-            description: req.body.description,
-            details: req.body.details,
-            creator: req.userId,
-            showAvatarUrl: req.body.showAvatarUrl,
-        })
-
-        const show = await doc.save();
+        const show = await createNewShow(req.body.name, req.body.author, req.body.duration, req.body.description, req.body.details, req.userId, req.body.showAvatarUrl,)
 
         res.json(show);
 
@@ -40,7 +29,7 @@ export const getAllShows = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const shows = await Show.find()
+        const shows = await getShows()
 
         if (shows.length === 0) {
             return res.status(404).json({
@@ -65,7 +54,7 @@ export const getShowById = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const show = await Show.findOne({_id: req.params.id})
+        const show = await getShow(req.params.id)
 
         if (!show) {
             return res.status(404).json({
@@ -91,19 +80,7 @@ export const updateShow = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        await Show.findOneAndUpdate({
-                _id: req.params.id,
-            },
-            {
-                name: req.body.name,
-                author: req.body.author,
-                duration: req.body.duration,
-                description: req.body.description,
-                details: req.body.details,
-                showAvatarUrl: req.body.showAvatarUrl,
-            })
-
-        const show = await Show.findById(req.params.id)
+        const show = await updateShowById(req.body.name, req.body.author, req.body.duration, req.body.description, req.body.details, req.body.showAvatarUrl, req.params.id)
 
         res.json(show);
 
@@ -117,29 +94,7 @@ export const updateShow = async (req, res) => {
 };
 export const removeShow = async (req, res) => {
     try {
-        Show.findOneAndDelete(
-            {
-                _id: req.params.id,
-            },
-            (err, doc) => {
-                if (err) {
-                    console.log(err);
-                    return res.status(404).json({
-                        message: 'Couldn`t delete this show',
-                    });
-                }
-
-                if (!doc) {
-                    return res.status(404).json({
-                        message: 'No such show',
-                    });
-                }
-
-                res.json({
-                    success: true,
-                });
-            },
-        );
+       await deleteShow(req.params.id)
     } catch (err) {
         console.log(err);
         res.status(403).json({

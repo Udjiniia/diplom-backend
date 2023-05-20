@@ -35,7 +35,7 @@ export const checkAuth = (req, res, next) => {
                 next();
         } catch (err) {
             res.status(403).json({
-                message: "Not authorized"
+                message: "Not authorized!"
             })
         }
     } else {
@@ -148,4 +148,23 @@ export const checkWorker = (req, res, next) => {
         })
     }
 }
+
+export const checkRole = (req, res) => {
+    const token = (req.headers.authorization || "Empty").replace(/Bearer\s?/, "");
+    if (token) {
+        try {
+            const decodedToken = jwt.verify(token, 'diplom');
+            res.json({role: decodedToken.role})
+        } catch (err) {
+            res.status(403).json({
+                message: "Not authorized"
+            })
+        }
+    } else {
+        return res.status(403).json({
+            message: "Not authorized"
+        })
+    }
+}
+
 

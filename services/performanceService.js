@@ -1,9 +1,12 @@
 import Hall from "../models/Hall.js";
 import Performance from "../models/Performance.js";
 import WorkSession from "../models/WorkSession.js";
-import {getWorkerStatusByTime} from "../services/workSessionService.js"
+import {getWorkerStatusByTime} from "./workSessionService.js"
+import Show from "../models/Show.js";
 
-export const createPerformanceWithTicketsAndSession = async (show, hall, time, details, userId, performanceAvatarUrl) => {
+export const createPerformanceWithTicketsAndSession = async (showId, hallId, time, details, userId, performanceAvatarUrl) => {
+    const show = await Show.findOne({_id: showId})
+    const hall = await Hall.findOne({_id: hallId})
 
     const endTime = new Date(time)
     endTime.setHours(show.duration.getHours() + endTime.getHours())
@@ -56,7 +59,9 @@ export const getPerformancesByDate = async (date) => {
     return schedule
 }
 
-export const getTimeForShowByDate = async (date, show, interval) => {
+export const getTimeForShowByDate = async (date, showId, interval) => {
+    const show = await Show.findById(showId)
+
     date.setHours(14)
     date.setMinutes(0)
     date.setSeconds(0)
@@ -163,5 +168,17 @@ export const findPerformanceSlot = async (performanceId, date) => {
     }
     console.log(schedule)
     return schedule
+}
+
+
+export const getPerformance = async (id) => {
+
+    return await Performance.findOne({_id: id})
+}
+
+
+export const getPerformances = async () => {
+
+    return await Performance.find()
 }
 

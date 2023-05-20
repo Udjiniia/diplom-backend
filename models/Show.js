@@ -33,4 +33,5 @@ const ShowSchema = new mongoose.Schema({
     });
 
 
+ShowSchema.index({ "name": 1, "author": 1 }, { unique: true })
 export default mongoose.model("Show", ShowSchema);

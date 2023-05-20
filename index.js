@@ -9,18 +9,25 @@ import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import {registerValidator, loginValidator} from "./validations/auth.js"
 import {hallValidator} from "./validations/hallValid.js"
-import {showValidator} from "./validations/showValid.js";
-import {performanceValidator} from "./validations/performanceValid.js";
-import {checkAdmin, checkHead, checkUser, checkAuth, checkAdministration,checkWorker} from "./validations/checkAuth.js"
+import {
+    checkAdmin,
+    checkHead,
+    checkUser,
+    checkAuth,
+    checkAdministration,
+    checkWorker,
+    checkRole
+} from "./validations/checkAuth.js"
 
-import {register, profile, login, removeRrofile, updateProfile} from "./controllers/userController.js"
-import {createHall, getAllHalls, getHallById, updateHall, removeHall} from "./controllers/hallController.js"
-import {createShow, removeShow, updateShow, getShowById, getAllShows } from "./controllers/showController.js";
-import {createPerformance, getScheduleByDate, getSlotsByDateByShow, getCheckedForReplacementByShow, getReplacementSlots} from "./controllers/performanceController.js";
-import {bookTicket, unbookTicket,buyTicket} from "./controllers/ticketController.js";
-import {getScheduleForWorker, checkWorkerAvailability} from "./controllers/workSessionController.js"
+import {userRouter} from "./routers/userRouter.js";
+import {ticketRouter} from "./routers/ticketsRouter.js";
+import {showRouter} from "./routers/showRouter.js";
+import {performanceRouter} from "./routers/performanceRouter.js";
+import {hallRouter} from "./routers/hallRouter.js";
+import {employeeRouter} from "./routers/employeeRouter.js";
+import {scheduleRouter} from "./routers/scheduleRouter.js";
+
 
 import User from "./models/User.js"
 import Hall from "./models/Hall.js"
@@ -30,7 +37,7 @@ import Performance from "./models/Performance.js";
 import WorkSession from "./models/WorkSession.js";
 
 mongoose.connect(
-    `mongodb+srv://admin:ihatekpi@cluster0.nu2roiy.mongodb.net/theater?retryWrites=true&w=majority`).then(
+    `mongodb+srv://Udj:password1616@diplom.zlsmfxt.mongodb.net/theater`).then(
     () => {
         console.log("DB OK")
     }
@@ -66,16 +73,23 @@ app.get(['/', '/register', '/login', '/profile', '/updateProfile'], (req, res) =
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-app.post("/register", registerValidator, register);
 
-app.post("/login", loginValidator, login);
-app.get("/me", checkAuth, profile);
 app.get("/checkAuth", checkAuth, (req, res) => res.json({
     success: true
 }));
+app.get("/checkWorker", checkWorker, (req, res) => res.json({
+    success: true
+}))
+app.get("/checkHead", checkHead, (req, res) => res.json({
+    success: true
+}))
+app.get("/checkRole", checkRole)
+app.get("/checkAdministration", checkAdministration, (req, res) => res.json({
+    success: true
+}))
 
-app.delete("/me/deleteAccount", checkUser, removeRrofile)
-app.patch("/me/updateAccount", checkUser, registerValidator, updateProfile)
+app.use("/user", userRouter)
+
 app.post("/upload", upload.single("image"), (req, res) => {
     res.json({
         url: `/uploads/${req.file.originalname}`,
@@ -83,33 +97,24 @@ app.post("/upload", upload.single("image"), (req, res) => {
 });
 
 //hall
-app.post("/hall/create", checkAdministration, hallValidator, createHall)
-app.get("/hall/all", checkAdministration, getAllHalls)
-app.get("/hall/:id", checkAdministration, getHallById)
-app.patch("/hall/update/:id", checkAdministration, hallValidator, updateHall)
-app.delete("/hall/delete/:id", checkAdministration, removeHall)
+app.use("/hall", hallRouter)
 
 //show
-app.post("/show/create", checkAdministration, showValidator, createShow)
-app.get("/show/all", checkAdministration, getAllShows)
-app.get("/show/:id", checkAdministration, getShowById)
-app.patch("/show/update/:id", checkAdministration, showValidator, updateShow)
-app.delete("/show/delete/:id", checkAdministration, removeShow)
-
+app.use("/show", showRouter)
 
 //performance + tickets
-app.post("/performance/create", checkAdministration, performanceValidator, createPerformance)
-app.put("/ticket/book/:id", checkUser, bookTicket)
-app.put("/ticket/unbook/:id", checkUser, unbookTicket)
-app.put("/ticket/buy/:id", checkUser, buyTicket)
-app.post("/performance/replace/:id", checkAdministration, getCheckedForReplacementByShow)
-app.post("/performance/replaceSlots", checkAdministration, getReplacementSlots)
+app.use("/ticket", ticketRouter)
+app.use("/performance", performanceRouter)
+
 
 //schedule
-app.post("/schedule", checkAuth, getScheduleByDate)
-app.post("/slots", checkAdministration, getSlotsByDateByShow)
-app.post("/mySchedule", checkWorker, getScheduleForWorker)
-app.post("/workerAvailable", checkAdministration, checkWorkerAvailability)
+app.use("/schedule", scheduleRouter)
+
+//employes
+app.use("/employee", employeeRouter)
+
+
+//users
 
 
 app.listen(process.env.PORT || 5000, (err) => {

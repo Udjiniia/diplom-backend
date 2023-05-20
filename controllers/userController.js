@@ -1,7 +1,16 @@
 import {validationResult} from "express-validator";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import {
+    createNewUser,
+    getUserByEmail,
+    deleteUser,
+    updateUserById,
+    updateUserPassword,
+    getEmployees,
+    updateUserStatus,
+    getUser
+} from "../services/userService.js";
 
 
 export const register = async (req, res) => {
@@ -11,22 +20,12 @@ export const register = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
+
         const passwordUnhashed = req.body.password;
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(passwordUnhashed, salt);
 
-        const doc = new User({
-            email: req.body.email,
-            password: passwordHash,
-            userRole: req.body.role,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            birthday: new Date(req.body.birthday),
-            phone: req.body.phone,
-            avatarUrl: req.body.avatarUrl,
-        })
-
-        const user = await doc.save();
+        const user = await createNewUser(req.body.email, passwordHash, req.body.userRole, req.body.firstName, req.body.lastName, req.body.birthday, req.body.phone, req.body.avatarUrl, req.body.status)
 
         const {password, ...userData} = user._doc;
 
@@ -48,15 +47,14 @@ export const login = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const user = await User.findOne({
-            email: req.body.email
-        })
+        const user = await getUserByEmail(req.body.email)
 
         if (!user) {
             return res.status(404).json({
                 message: "Wrong email or password"
             })
         }
+
 
         const isValidPassword = await bcrypt.compare(req.body.password, user._doc.password)
 
@@ -91,7 +89,7 @@ export const login = async (req, res) => {
 
 export const profile = async (req, res) => {
     try {
-        const user = await User.findById(req.userId)
+        const user = await getUser(req.userId)
         if (!user) {
             return res.status(404).json({
                 message: "No such user"
@@ -99,7 +97,6 @@ export const profile = async (req, res) => {
         }
 
         const {password, ...userData} = user._doc;
-
         res.json({userData});
 
     } catch (err) {
@@ -111,29 +108,7 @@ export const profile = async (req, res) => {
 
 export const removeRrofile = async (req, res) => {
     try {
-        User.findOneAndDelete(
-            {
-                _id: req.userId,
-            },
-            (err, doc) => {
-                if (err) {
-                    console.log(err);
-                    return res.status(404).json({
-                        message: 'Couldn`t delete user ',
-                    });
-                }
-
-                if (!doc) {
-                    return res.status(404).json({
-                        message: 'No such user',
-                    });
-                }
-
-                res.json({
-                    success: true,
-                });
-            },
-        );
+        await deleteUser(req.params.id)
     } catch (err) {
         console.log(err);
         res.status(403).json({
@@ -149,25 +124,7 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const passwordUnhashed = req.body.password;
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(passwordUnhashed, salt);
-
-        await User.findOneAndUpdate({
-                _id: req.userId,
-            },
-            {
-                email: req.body.email,
-                password: passwordHash,
-                userRole: req.role,
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                birthday: req.body.birthday,
-                phone: req.body.phone,
-                avatarUrl: req.body.avatarUrl,
-            })
-
-        const user = await User.findById(req.userId)
+        const user = await updateUserById(req.body.email, req.body.firstName, req.body.lastName, req.body.birthday, req.body.phone, req.body.avatarUrl, req.userId)
 
         const token = jwt.sign({
                 _id: user._id,
@@ -184,7 +141,87 @@ export const updateProfile = async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({
-                message: "Updating data failed"
+                message: "Updating profile failed"
+            }
+        )
+    }
+};
+
+export const updatePassword = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array());
+        }
+
+        const passwordUnhashed = req.body.password;
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(passwordUnhashed, salt);
+
+        const user = await updateUserPassword(req.userId, passwordHash)
+
+        const token = jwt.sign({
+                _id: user._id,
+                email: req.body.email,
+                role: user.userRole
+            }
+            , "diplom", {
+                expiresIn: '10d',
+            });
+
+        const {password, ...userData} = user._doc;
+        res.json({...userData, token});
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+                message: "Updating password failed"
+            }
+        )
+    }
+};
+
+export const getAllEmployees = async (req, res) => {
+    try {
+        const users = await getEmployees()
+
+        res.json(users);
+    } catch (err) {
+        res.status(403).json({
+            message: "Couldn`t get the employees",
+        })
+    }
+};
+
+export const getUserById = async (req, res) => {
+    try {
+        const user = await getUser(req.params.id)
+
+        res.json(user);
+
+    } catch (err) {
+        res.status(403).json({
+            message: "Couldn`t get the user",
+        })
+    }
+};
+
+export const updateStatus = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array());
+        }
+
+        const user = await updateUserStatus(req.params.id, req.body.status)
+
+        const {password, ...userData} = user._doc;
+        res.json({...userData});
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+                message: "Updating status failed"
             }
         )
     }

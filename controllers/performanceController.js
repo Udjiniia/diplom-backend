@@ -1,11 +1,7 @@
-import {check, validationResult} from "express-validator";
-import Performance from "../models/Performance.js";
-import Show from "../models/Show.js";
-import Hall from "../models/Hall.js";
+import {validationResult} from "express-validator";
 import {createTickets, checkTicketAvailability} from "../services/ticketService.js";
-import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot} from "../services/performanceService.js"
+import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot, getPerformance, getPerformances} from "../services/performanceService.js"
 import {createWorkSessionForPerformance} from "../services/workSessionService.js";
-import show from "../models/Show.js";
 
 export const createPerformance = async (req, res) => {
     try {
@@ -14,13 +10,10 @@ export const createPerformance = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const show = await Show.findOne({name: req.body.showName, author: req.body.showAuthor})
-        const hall = await Hall.findOne({name: req.body.hallName})
-
-        const performance = await createPerformanceWithTicketsAndSession(show, hall, req.body.performanceTime,
+        const performance = await createPerformanceWithTicketsAndSession(req.body.showId, req.body.hallId, req.body.performanceTime,
             req.body.details, req.userId, req.body.performanceAvatarUrl)
 
-        await createTickets(performance, hall, req.body.prices)
+        await createTickets(performance, req.body.hallId, req.body.prices)
 
         for (const s of req.body.session) {
             await createWorkSessionForPerformance(s[0], performance._id, s[1], s[2])
@@ -44,7 +37,7 @@ export const getPerformanceById = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const performance = await Performance.findOne({_id: req.params.id})
+        const performance = await getPerformance(req.params.id)
 
         if (!performance) {
             return res.status(404).json({
@@ -70,7 +63,7 @@ export const getAllPerformances = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const performances = await Performance.find()
+        const performances = await getPerformances()
 
         if (performances.length === 0) {
             return res.status(404).json({
@@ -88,37 +81,6 @@ export const getAllPerformances = async (req, res) => {
     }
 };
 
-export const updatePerformance = async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
-        await Performance.findOneAndUpdate({
-                _id: req.params.id,
-            },
-            {
-                performanceTime: req.body.performanceTime,
-                details: req.body.details,
-                creator: req.userId,
-                show: show,
-                hall: hall,
-                performanceAvatarUrl: req.body.performanceAvatarUrl,
-            })
-
-        const show = await Show.findById(req.params.id)
-
-        res.json(show);
-
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({
-                message: "Updating data failed"
-            }
-        )
-    }
-};
 
 export const getScheduleByDate = async (req, res) => {
     try {
@@ -147,9 +109,7 @@ export const getSlotsByDateByShow = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const show = await Show.findById(req.body.showId)
-
-        const schedule = await getTimeForShowByDate(new Date(req.body.date), show, req.body.interval)
+        const schedule = await getTimeForShowByDate(new Date(req.body.date), req.body.showId, req.body.interval)
 
         res.json(schedule);
 
@@ -169,10 +129,7 @@ export const getCheckedForReplacementByShow = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const performance = await Performance.findById(req.params.id)
-        const performance2 = await Performance.findById(req.body.performance)
-
-        const available = await checkTicketAvailability(performance._id, performance2._id)
+        const available = await checkTicketAvailability(req.params.id, req.body.performance)
 
         res.json(available);
 

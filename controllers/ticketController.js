@@ -1,5 +1,3 @@
-import Performance from "../models/Performance.js";
-import Ticket from "../models/Ticket.js";
 import {check, validationResult} from "express-validator";
 import {addToBasketTicketById, unbookTicketById, bookTicketById, buyTicketById} from "../services/ticketService.js"
 

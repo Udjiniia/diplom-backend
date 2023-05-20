@@ -19,6 +19,11 @@ const UserSchema = new mongoose.Schema({
             enum : ['user','admin','head','worker'],
             required: true,
         },
+        status: {
+            type: String,
+            enum : ['active','inactive'],
+            default: 'active'
+        },
         password: {
             type: String,
             required: true
