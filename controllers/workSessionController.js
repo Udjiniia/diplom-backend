@@ -9,7 +9,7 @@ export const getScheduleForWorker = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const schedule = await getWorkerScheduleByDate(req.body.date, req.userId)
+        const schedule = await getWorkerScheduleByDate(new Date(req.body.date), req.userId)
 
         res.json(schedule)
 

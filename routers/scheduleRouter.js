@@ -7,5 +7,5 @@ export const scheduleRouter = new Router()
 
 scheduleRouter.post("/schedule", checkAuth, getScheduleByDate)
 scheduleRouter.post("/slots", checkAdministration, getSlotsByDateByShow)
-scheduleRouter.post("/mySchedule", checkWorker, getScheduleForWorker)
+scheduleRouter.post("/my-schedule", checkWorker, getScheduleForWorker)
 scheduleRouter.post("/workerAvailable", checkAdministration, checkWorkerAvailability)

@@ -1,7 +1,7 @@
 import User from "../models/User.js";
 
 export const createNewUser = async (email, password, role, firstName, lastName, birthday, phone, avatarUrl, status) => {
-    console.log(role)
+
     const doc = new User({
         email: email,
         password: password,
@@ -27,7 +27,7 @@ export const getUser = async (id) => {
     return User.findOne({_id: id});
 }
 
-export const updateUserById = async (email, firstName, lastName, birthday, phone, avatarUrl, status, id) => {
+export const updateUserById = async (email, firstName, lastName, birthday, phone, avatarUrl, id) => {
 
     await User.findOneAndUpdate({
             _id: id,
@@ -38,8 +38,7 @@ export const updateUserById = async (email, firstName, lastName, birthday, phone
             lastName: lastName,
             birthday: new Date(birthday),
             phone: phone,
-            avatarUrl: avatarUrl,
-            status: status
+            avatarUrl: avatarUrl
         })
     return await User.findOne({_id: id})
 }
@@ -82,6 +81,15 @@ export const deleteUser = async (id) => {
 export const getEmployees = async () => {
     return User.find({userRole: {$in: ['admin', 'worker']}}).sort({status: 1}).sort({userRole: 1});
 }
+
+export const getWorkers = async () => {
+    return User.find({userRole: {$in: ['worker']}}).sort({status: 1});
+}
+export const getWorkersActive = async () => {
+    return User.find({userRole: {$in: ['worker']}, status: "active"});
+}
+
+
 
 
 export const updateUserStatus = async (id, status) => {

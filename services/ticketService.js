@@ -4,9 +4,9 @@ import Performance from "../models/Performance.js";
 import Hall from "../models/Hall.js";
 import Show from "../models/Show.js";
 
-export const createTickets = async (performance, hallId, priceArray) => {
-    const hall = await Hall.findOne({_id: hallId})
-
+export const createTickets = async (performance, hallName, priceArray) => {
+    const hall = await Hall.findOne({name: hallName})
+    console.log()
     const allSeats = hall.capacity
     const rows = hall.rows
     const lastRow = allSeats % rows

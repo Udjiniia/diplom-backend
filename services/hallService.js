@@ -1,4 +1,5 @@
 import Hall from "../models/Hall.js";
+import Performance from "../models/Performance.js";
 
 export const createNewHall = async (name, rows, capacity, details, userId) => {
     const doc = new Hall({
@@ -20,6 +21,21 @@ export const getHalls = async () => {
 export const getHall = async (id) => {
 
     return Hall.findOne({_id: id});
+}
+
+export const getHallByUnName = async (name) => {
+
+    return Hall.findOne({name: name});
+}
+
+export const checkHallAvailable = async (hall, date, start, end) => {
+    date.setHours(0)
+    date.setMinutes(0)
+    const nextDay = new Date(date)
+    const performances = Performance.find({hall: hall._id, performanceTime: {$gte: date, $lte: nextDay}})
+
+
+
 }
 
 export const updateHallById = async (name, rows, capacity, details, status, id) => {

@@ -1,5 +1,5 @@
 import {validationResult} from "express-validator";
-import {createNewHall, getHalls, getHall, updateHallById, deleteHall} from "../services/hallService.js";
+import {createNewHall, getHalls, getHall, updateHallById, deleteHall, getHallByUnName} from "../services/hallService.js";
 
 
 export const createHall = async (req, res) => {
@@ -42,6 +42,32 @@ export const getAllHalls = async (req, res) => {
         console.log(err);
         res.status(500).json({
                 message: "Couldn`t get list of halls"
+            }
+        )
+    }
+};
+
+export const getHallByName = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors.array());
+        }
+
+        const hall = await getHallByUnName(req.body.name)
+
+        if (!hall) {
+            return res.status(404).json({
+                message: "No such hall"
+            })
+        }
+
+        res.json(hall);
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({
+                message: "This hall doesn`t exist"
             }
         )
     }

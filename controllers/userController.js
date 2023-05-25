@@ -9,8 +9,9 @@ import {
     updateUserPassword,
     getEmployees,
     updateUserStatus,
-    getUser
-} from "../services/userService.js";
+    getUser, getWorkers, getWorkersActive} from "../services/userService.js";
+
+
 
 
 export const register = async (req, res) => {
@@ -124,6 +125,7 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
+
         const user = await updateUserById(req.body.email, req.body.firstName, req.body.lastName, req.body.birthday, req.body.phone, req.body.avatarUrl, req.userId)
 
         const token = jwt.sign({
@@ -189,6 +191,30 @@ export const getAllEmployees = async (req, res) => {
     } catch (err) {
         res.status(403).json({
             message: "Couldn`t get the employees",
+        })
+    }
+};
+
+export const getAllWorkers = async (req, res) => {
+    try {
+        const users = await getWorkers()
+
+        res.json(users);
+    } catch (err) {
+        res.status(403).json({
+            message: "Couldn`t get the workers",
+        })
+    }
+};
+
+export const getAllActiveWorkers = async (req, res) => {
+    try {
+        const users = await getWorkersActive()
+
+        res.json(users);
+    } catch (err) {
+        res.status(403).json({
+            message: "Couldn`t get the workers",
         })
     }
 };
