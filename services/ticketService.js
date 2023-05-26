@@ -122,7 +122,8 @@ export const buyTicketById = async (ticketId, userId) => {
         }
     }, async function (err) {
         if (err) throw err
-        await ticket.updateOne({qrUrl: `./qrcodes/${ticketId}.png`})
+        await ticket.updateOne({qrUrl: `/qrcodes/${ticketId}.png`})
+        console.log(`/qrcodes/${ticketId}.png`)
         sendTicketToEmail(ticketOwner.email, ticketId, ticketData)
     })
 
