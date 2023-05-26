@@ -70,3 +70,7 @@ export const getWorkerStatusByTime = async (timeStart, timeEnd, workerId) => {
     return (status.length === 0)
 
 }
+
+export const getWorkerSessionsByPerformace = async (performanceId) => {
+    return await WorkSession.find({performance: performanceId})
+}

@@ -68,7 +68,7 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get(['/', '/register', '/login', '/profile', '/update-profile', '/shows', '/halls', '/update-password',
     '/hall-create', '/employees', '/employee-create', '/show-create', '/performances', '/performance-create',
     '/all-tickets/:id', '/my-schedule', '/schedule', '/schedule-tickets', '/tickets/:id', '/basket',
-    '/tickets', '/posters'], (req, res) => {
+    '/tickets', '/posters', 'workers/:id'], (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
