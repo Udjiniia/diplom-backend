@@ -6,7 +6,7 @@ import {createShow, getAllShows, getShowById, removeShow, updateShow} from "../c
 export const showRouter = new Router()
 
 showRouter.post("/create", checkAdministration, showValidator, createShow)
-showRouter.get("/all", checkAdministration, getAllShows)
-showRouter.get("/:id", checkAdministration, getShowById)
+showRouter.get("/all", getAllShows)
+showRouter.get("/:id", getShowById)
 showRouter.put("/update/:id", checkAdministration, showValidator, updateShow)
 showRouter.delete("/delete/:id", checkAdministration, removeShow)

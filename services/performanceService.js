@@ -5,6 +5,7 @@ import {getWorkerStatusByTime} from "./workSessionService.js"
 import Show from "../models/Show.js";
 import {checkHallAvailable} from "./hallService.js";
 import hall from "../models/Hall.js";
+import User from "../models/User.js";
 
 export const createPerformanceWithTicketsAndSession = async (showId, hallName, time, details, userId, performanceAvatarUrl) => {
     const show = await Show.findOne({_id: showId})
@@ -75,7 +76,7 @@ export const getTimeForShowByDate = async (date, showId, interval, workers) => {
     nextDay.setDate(nextDay.getDate() + 1)
     nextDay.setHours(0)
 
-    const halls = await Hall.find()
+    const halls = await Hall.find({status: "active"})
     const performances = await Performance.find({performanceTime: {$gte: date, $lte: nextDay}})
 
     let schedule = [];
@@ -231,7 +232,16 @@ export const getPerformance = async (id) => {
 
 
 export const getPerformances = async () => {
-
-    return await Performance.find()
+    let now = new Date()
+    now = now.toISOString().split('T')[0]
+    return await Performance.find({performanceTime:{$gte: now} }).sort({performanceTime: 1})
 }
 
+export const deletePerformance = async (id) => {
+
+    await Performance.findOneAndDelete({
+            _id: id,
+        })
+    return await Performance.findById(id) == null
+
+}

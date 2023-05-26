@@ -56,7 +56,7 @@ export const updateUserPassword = async (id, password) => {
 }
 
 export const deleteUser = async (id) => {
-    User.findOneAndDelete(
+    await User.findOneAndDelete(
         {
             id,
         }),

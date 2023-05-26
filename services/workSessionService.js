@@ -34,15 +34,13 @@ export const getWorkerScheduleByDate = async (date, workerId) => {
 
     const schedule = []
     for (const w of workerPerformances) {
-        const performance = await Performance.findById(w.performance)
+        const performance = await Performance.findById(w.performance).sort({performanceTime: 1})
         const show = await Show.findById(performance.show)
         const hall = await Hall.findById(performance.hall)
         const data = {
             performance: performance,
             show: show.name,
             hall: hall.name,
-            performanceWorkTime: performance.performanceWorkTime,
-            performanceWorkEndTime: performance.performanceWorkEndTime,
             role:  w.role,
             salary:  w.salary
         }

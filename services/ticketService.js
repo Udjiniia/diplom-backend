@@ -3,7 +3,14 @@ import User from "../models/User.js";
 import Performance from "../models/Performance.js";
 import Hall from "../models/Hall.js";
 import Show from "../models/Show.js";
+import ticket from "../models/Ticket.js";
+import QRCode from "qrcode"
+import nodemailer from "nodemailer"
+import fs from "fs"
 
+String.prototype.trimLenFrom = function (start, length) {
+    return this.length > length ? this.substring(start, length) : this;
+}
 export const createTickets = async (performance, hallName, priceArray) => {
     const hall = await Hall.findOne({name: hallName})
     console.log()
@@ -63,6 +70,23 @@ export const unbookTicketById = async (ticketId) => {
     return Ticket.findById(ticketId);
 }
 
+export const unbookTicketForUser = async (userId) => {
+
+
+    const tickets = await Ticket.updateMany({
+            owner: userId,
+            status: "booked"
+        },
+        {
+            $set: {status: "free"}
+        }, {
+            multi: true
+        })
+
+
+    return tickets;
+}
+
 export const buyTicketById = async (ticketId, userId) => {
 
     await Ticket.findOneAndUpdate({
@@ -99,7 +123,7 @@ export const buyTicketById = async (ticketId, userId) => {
     }, async function (err) {
         if (err) throw err
         await ticket.updateOne({qrUrl: `./qrcodes/${ticketId}.png`})
-        sendTicketToEmail(ticketOwner.email, ticketId,ticketData)
+        sendTicketToEmail(ticketOwner.email, ticketId, ticketData)
     })
 
     return ticket;
@@ -131,18 +155,21 @@ const sendTicketToEmail = (email, ticketId, ticketData) => {
     };
     const transporter = nodemailer.createTransport(smtpConfig);
 
+    console.log(ticketData.time.getDate())
+    console.log(ticketData.time.getMonth())
+
     const mailOptions = {
         from: "TheaterPoshta@gmail.com",
         to: `${email}`,
         subject: `Квиток на виставу "${ticketData.show}"`,
-        text: `Ваш квиток на виставу "${ticketData.show}", що відбудеться ${ticketData.time.getDay()}/${ticketData.time.getMonth()}/${ticketData.time.getFullYear()} o ${ticketData.time.getHours()}:${ticketData.time.getMinutes()}. Зала ${ticketData.hall} , ряд ${ticketData.row}, місце ${ticketData.seat}. Чекаємо на Вас!`,
+        text: `Ваш квиток на виставу "${ticketData.show}", що відбудеться ${ticketData.time.getDate()}-${ticketData.time.getMonth() + 1}-${ticketData.time.getFullYear()}. Зала ${ticketData.hall}, ряд ${ticketData.row}, місце ${ticketData.seat}. Чекаємо на Вас!`,
         attachments: [{
             filename: `${ticketData.firstname}  ${ticketData.lastname} квиток.png`,
             content: fs.createReadStream(`./qrcodes/${ticketId}.png`)
         }]
     };
 
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
         } else {
@@ -160,7 +187,7 @@ export const checkTicketAvailability = async (performanceCancelledId, performanc
     const replaced = []
     for (const tC of ticketsCancelled) {
         for (const tF of ticketsFree) {
-            if(tC.row ===  tF.row && tC.seat === tF.seat){
+            if (tC.row === tF.row && tC.seat === tF.seat) {
                 replaced.push(tF)
             }
         }
@@ -176,13 +203,13 @@ export const replaceTickets = async (performanceCancelledId, performanceId) => {
     const replaced = []
     for (const tC of ticketsCancelled) {
         for (const tF of ticketsFree) {
-            if(tC.row ===  tF.row && tC.seat === tF.seat){
-                await  tF.updateOne(
-                {
-                    owner: tC.owner,
-                    status: "sold",
-                    qrUrl: await tC.qrUrl
-                })
+            if (tC.row === tF.row && tC.seat === tF.seat) {
+                await tF.updateOne(
+                    {
+                        owner: tC.owner,
+                        status: "sold",
+                        qrUrl: await tC.qrUrl
+                    })
                 replaced.push(tF)
             }
         }
@@ -214,7 +241,7 @@ export const sendReplacementEmail = async (email, performanceId, newPerformanceI
         text: `Ваш квиток на виставу "${show.name}", що повинна була відбутись відбудеться ${performance.performanceTime.getDay()}/${performance.performanceTime.getMonth()}/${performance.performanceTime.getFullYear()} o ${performance.performanceTime.getHours()}:${performance.performanceTime.getMinutes()} ПЕРЕНОСИТЬСЯ на ${newPerformance.performanceTime.getDay()}/${newPerformance.performanceTime.getMonth()}/${newPerformance.performanceTime.getFullYear()} o ${newPerformance.performanceTime.getHours()}:${newPerformance.performanceTime.getMinutes()}. Попередні квитки дійсні!`,
     };
 
-    transporter.sendMail(mailOptions, function(error, info){
+    transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
         } else {
@@ -223,5 +250,42 @@ export const sendReplacementEmail = async (email, performanceId, newPerformanceI
     });
 
 }
+
+export const getTicketsFree = async (performanceId) => {
+
+    const tickets = await ticket.find({performance: performanceId, status: {$in: ['free', 'in basket']}}).sort({row: 1, seat: 1})
+    return tickets;
+}
+
+export const getTicketsForUserBasket = async (userId) => {
+
+    const tickets = await ticket.find({owner: userId, status:  'in basket'}).sort({row: 1, seat: 1})
+    return tickets;
+}
+
+export const getTicketsForUser = async (userId) => {
+
+    const tickets = await ticket.find({owner: userId, status:'sold'}).sort({row: 1, seat: 1})
+    return tickets;
+}
+
+export const removeFromBasketTicketById = async (ticketId) => {
+    await Ticket.findOneAndUpdate({
+            _id: ticketId,
+        },
+        {
+            status: "free",
+            owner: null
+        })
+
+    return Ticket.findById(ticketId);
+}
+
+export const getAllTicketsForPerformance = async (performanceId) => {
+
+    const tickets = await ticket.find({performance: performanceId}).sort({row: 1, seat: 1})
+    return tickets;
+}
+
 
 

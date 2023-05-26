@@ -15,7 +15,7 @@ export const createNewHall = async (name, rows, capacity, details, userId) => {
 
 export const getHalls = async () => {
 
-    return Hall.find();
+    return Hall.find().sort({status: 1});
 }
 
 export const getHall = async (id) => {

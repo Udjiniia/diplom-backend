@@ -7,7 +7,8 @@ export const hallRouter = new Router()
 
 hallRouter .post("/create", checkHead, hallValidator, createHall)
 hallRouter .get("/all", checkAdministration, getAllHalls)
-hallRouter .get("/:id", checkAdministration, getHallById)
+hallRouter .get("/:id", getHallById)
 hallRouter .post("/name", checkAdministration, getHallByName)
 hallRouter .put("/update/:id", checkHead, hallValidator, updateHall)
 hallRouter .delete("/delete/:id", checkHead, removeHall)
+

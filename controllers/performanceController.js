@@ -2,8 +2,9 @@ import {validationResult} from "express-validator";
 import mongoose from "mongoose";
 const conn = mongoose.connection;
 import {createTickets, checkTicketAvailability} from "../services/ticketService.js";
-import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot, getPerformance, getPerformances} from "../services/performanceService.js"
+import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot, getPerformance, getPerformances, deletePerformance} from "../services/performanceService.js"
 import {createWorkSessionForPerformance} from "../services/workSessionService.js";
+import {deleteUser} from "../services/userService.js";
 
 export const createPerformance = async (req, res) => {
     const session = await conn.startSession();
@@ -169,5 +170,17 @@ export const getReplacementSlots = async (req, res) => {
                 message: "Couldn`t get the slots "
             }
         )
+    }
+};
+
+export const removePerformance = async (req, res) => {
+    try {
+        const res = await deletePerformance(req.params.id)
+        return {"sucsess" : res}
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({
+            message: 'Could not delete performance',
+        });
     }
 };
