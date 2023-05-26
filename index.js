@@ -106,7 +106,7 @@ app.use("/hall", hallRouter)
 app.use("/show", showRouter)
 
 //performance + tickets
-app.use("/tickets", ticketRouter)
+app.use("/ticket", ticketRouter)
 app.use("/performance", performanceRouter)
 
 

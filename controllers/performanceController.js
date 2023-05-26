@@ -5,6 +5,7 @@ import {createTickets, checkTicketAvailability} from "../services/ticketService.
 import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot, getPerformance, getPerformances, deletePerformance} from "../services/performanceService.js"
 import {createWorkSessionForPerformance} from "../services/workSessionService.js";
 import {deleteUser} from "../services/userService.js";
+import ticket from "../models/Ticket.js";
 
 export const createPerformance = async (req, res) => {
     const session = await conn.startSession();
@@ -174,10 +175,13 @@ export const getReplacementSlots = async (req, res) => {
 };
 
 export const removePerformance = async (req, res) => {
+    const session = await conn.startSession();
     try {
+        session.startTransaction();
         const res = await deletePerformance(req.params.id)
         return {"sucsess" : res}
     } catch (err) {
+        await session.abortTransaction();
         console.log(err);
         res.status(403).json({
             message: 'Could not delete performance',

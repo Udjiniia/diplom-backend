@@ -6,6 +6,8 @@ import Show from "../models/Show.js";
 import {checkHallAvailable} from "./hallService.js";
 import hall from "../models/Hall.js";
 import User from "../models/User.js";
+import ticket from "../models/Ticket.js";
+import workSession from "../models/WorkSession.js";
 
 export const createPerformanceWithTicketsAndSession = async (showId, hallName, time, details, userId, performanceAvatarUrl) => {
     const show = await Show.findOne({_id: showId})
@@ -239,9 +241,17 @@ export const getPerformances = async () => {
 
 export const deletePerformance = async (id) => {
 
+    const tickets = await ticket.find({performance: id})
+    const sessions = await workSession.find({performance: id})
+    for (const t of tickets){
+        await ticket.deleteOne(t)
+    }
+    for (const s of sessions) {
+        await workSession.deleteOne(s)
+    }
     await Performance.findOneAndDelete({
-            _id: id,
-        })
+        _id: id,
+    })
     return await Performance.findById(id) == null
 
 }
