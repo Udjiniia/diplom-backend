@@ -62,6 +62,8 @@ const upload = multer({
     storage
 })
 
+
+
 app.use(express.static(path.join(__dirname, 'build')));
 
 
@@ -75,7 +77,7 @@ app.get(['/', '/register', '/login', '/profile', '/update-profile', '/shows', '/
 
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-
+app.use('/qrcodes', express.static('qrcodes'));
 
 app.get("/checkAuth", checkAuth, (req, res) => res.json({
     success: true
@@ -98,6 +100,7 @@ app.post("/upload", upload.single("image"), (req, res) => {
         url: `/uploads/${req.file.originalname}`,
     })
 });
+
 
 //hall
 app.use("/hall", hallRouter)

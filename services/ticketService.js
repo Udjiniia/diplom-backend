@@ -117,7 +117,7 @@ export const buyTicketById = async (ticketId, userId) => {
 
     QRCode.toFile(`./qrcodes/${ticketId}.png`, stringTicket, {
         color: {
-            dark: '#FFF',  // Blue dots
+            dark: '#000',  // Blue dots
             light: '#0000' // Transparent background
         }
     }, async function (err) {
