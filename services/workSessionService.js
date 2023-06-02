@@ -72,5 +72,5 @@ export const getWorkerStatusByTime = async (timeStart, timeEnd, workerId) => {
 }
 
 export const getWorkerSessionsByPerformace = async (performanceId) => {
-    return await WorkSession.find({performance: performanceId})
+    return WorkSession.find({performance: performanceId}).populate("worker")
 }

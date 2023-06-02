@@ -1,7 +1,7 @@
 import {validationResult} from "express-validator";
 import mongoose from "mongoose";
 const conn = mongoose.connection;
-import {createTickets, checkTicketAvailability} from "../services/ticketService.js";
+import {createTickets, checkTicketAvailability, checkTicketAvailabilityByShow} from "../services/ticketService.js";
 import {getPerformancesByDate, getTimeForShowByDate, createPerformanceWithTicketsAndSession, findPerformanceSlot, getPerformance, getPerformances, deletePerformance} from "../services/performanceService.js"
 import {createWorkSessionForPerformance} from "../services/workSessionService.js";
 import {deleteUser} from "../services/userService.js";
@@ -70,6 +70,7 @@ export const getAllPerformances = async (req, res) => {
         }
 
         const performances = await getPerformances()
+
 
         if (performances.length === 0) {
             return res.status(404).json({
@@ -141,7 +142,7 @@ export const getCheckedForReplacementByShow = async (req, res) => {
             return res.status(400).json(errors.array());
         }
 
-        const available = await checkTicketAvailability(req.params.id, req.body.performance)
+        const available = await checkTicketAvailabilityByShow(req.params.id, req.body.show)
 
         res.json(available);
 

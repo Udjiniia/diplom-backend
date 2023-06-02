@@ -181,6 +181,10 @@ export const getTimeForShowByDate = async (date, showId, interval, workers) => {
     return schedule
 }*/
 
+export const findPerformanceReplacement = async (performanceId, show) => {
+    const performance = Performance.find({_id: performanceId})
+    return Performance.find({show : show, performanceTime: {$gte: performance.performanceTime}})
+}
 export const findPerformanceSlot = async (date, showId, interval, workers) => {
 
     date.setHours(0)
@@ -228,15 +232,14 @@ export const findPerformanceSlot = async (date, showId, interval, workers) => {
 
 
 export const getPerformance = async (id) => {
-
-    return await Performance.findOne({_id: id})
+    return Performance.findOne({_id: id}).populate("hall").populate("show")
 }
 
 
 export const getPerformances = async () => {
     let now = new Date()
     now = now.toISOString().split('T')[0]
-    return await Performance.find({performanceTime:{$gte: now} }).sort({performanceTime: 1})
+    return Performance.find({performanceTime: {$gte: now}}).sort({performanceTime: 1}).populate("hall").populate("show")
 }
 
 export const deletePerformance = async (id) => {

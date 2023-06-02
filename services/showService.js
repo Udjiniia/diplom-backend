@@ -17,7 +17,7 @@ export const createNewShow = async ( name, author,duration, description, details
 
 export const getShows = async () => {
 
-    return Show.find().sort({name: 1});
+    return Show.find().sort({name: 1}).populate("creator")
 }
 
 export const getShow = async (id) => {

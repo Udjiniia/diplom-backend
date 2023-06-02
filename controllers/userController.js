@@ -59,7 +59,7 @@ export const login = async (req, res) => {
 
         const isValidPassword = await bcrypt.compare(req.body.password, user._doc.password)
 
-        if (!isValidPassword) {
+        if (!isValidPassword || user.status !=="active") {
             return res.status(404).json({
                 message: "Wrong email or password!!"
             })

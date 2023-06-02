@@ -1,9 +1,9 @@
 import Ticket from "../models/Ticket.js";
+import ticket from "../models/Ticket.js";
 import User from "../models/User.js";
 import Performance from "../models/Performance.js";
 import Hall from "../models/Hall.js";
 import Show from "../models/Show.js";
-import ticket from "../models/Ticket.js";
 import QRCode from "qrcode"
 import nodemailer from "nodemailer"
 import fs from "fs"
@@ -13,7 +13,6 @@ String.prototype.trimLenFrom = function (start, length) {
 }
 export const createTickets = async (performance, hallName, priceArray) => {
     const hall = await Hall.findOne({name: hallName})
-    console.log()
     const allSeats = hall.capacity
     const rows = hall.rows
     const lastRow = allSeats % rows
@@ -71,9 +70,7 @@ export const unbookTicketById = async (ticketId) => {
 }
 
 export const unbookTicketForUser = async (userId) => {
-
-
-    const tickets = await Ticket.updateMany({
+    return Ticket.updateMany({
             owner: userId,
             status: "booked"
         },
@@ -81,10 +78,7 @@ export const unbookTicketForUser = async (userId) => {
             $set: {status: "free"}
         }, {
             multi: true
-        })
-
-
-    return tickets;
+        });
 }
 
 export const buyTicketById = async (ticketId, userId) => {
@@ -197,6 +191,21 @@ export const checkTicketAvailability = async (performanceCancelledId, performanc
     return (replaced.length === ticketsCancelled.length)
 }
 
+export const checkTicketAvailabilityByShow = async (performanceId, show) => {
+    const performance = Performance.find({_id: performanceId})
+    const performances = await Performance.find({show : show, performanceTime: {$gte: performance.performanceTime}})
+
+    const available = []
+
+    for (const p of performances){
+        if (await checkTicketAvailability(performanceId, p._id)){
+            available.push(p)
+        }
+    }
+
+    return available.populate("hall").populate("show")
+}
+
 export const replaceTickets = async (performanceCancelledId, performanceId) => {
     const ticketsCancelled = await Ticket.find({performance: performanceCancelledId, status: "sold"})
     const ticketsFree = await Ticket.find({performance: performanceId, status: {$in: ["free", "booked", "in basket"]}})
@@ -209,7 +218,7 @@ export const replaceTickets = async (performanceCancelledId, performanceId) => {
                     {
                         owner: tC.owner,
                         status: "sold",
-                        qrUrl: await tC.qrUrl
+                        qrUrl: tC.qrUrl
                     })
                 replaced.push(tF)
             }
@@ -254,20 +263,25 @@ export const sendReplacementEmail = async (email, performanceId, newPerformanceI
 
 export const getTicketsFree = async (performanceId) => {
 
-    const tickets = await ticket.find({performance: performanceId, status: {$in: ['free', 'in basket']}}).sort({row: 1, seat: 1})
-    return tickets;
+    return ticket.find({performance: performanceId, status: {$in: ['free', 'in basket']}}).sort({
+        row: 1,
+        seat: 1
+    });
 }
 
 export const getTicketsForUserBasket = async (userId) => {
 
-    const tickets = await ticket.find({owner: userId, status:  'in basket'}).sort({row: 1, seat: 1})
-    return tickets;
+    return ticket.find({owner: userId, status: 'in basket'}).sort({row: 1, seat: 1});
 }
 
 export const getTicketsForUser = async (userId) => {
 
-    const tickets = await ticket.find({owner: userId, status:'sold'}).sort({row: 1, seat: 1})
-    return tickets;
+    return ticket.find({owner: userId, status: 'sold'}).sort({
+        row: 1,
+        seat: 1
+    }).populate("performance").populate({path: "performance", populate: {path: "show"}})
+        .populate({path: "performance", populate: {path: "hall"}})
+
 }
 
 export const removeFromBasketTicketById = async (ticketId) => {
@@ -283,9 +297,8 @@ export const removeFromBasketTicketById = async (ticketId) => {
 }
 
 export const getAllTicketsForPerformance = async (performanceId) => {
-
-    const tickets = await ticket.find({performance: performanceId}).sort({row: 1, seat: 1})
-    return tickets;
+    return ticket.find({performance: performanceId}).sort({row: 1, seat: 1}).populate("owner")
+        .populate("performance");
 }
 
 

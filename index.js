@@ -9,11 +9,8 @@ import {fileURLToPath} from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import {hallValidator} from "./validations/hallValid.js"
 import {
-    checkAdmin,
     checkHead,
-    checkUser,
     checkAuth,
     checkAdministration,
     checkWorker,
@@ -28,13 +25,6 @@ import {hallRouter} from "./routers/hallRouter.js";
 import {employeeRouter} from "./routers/employeeRouter.js";
 import {scheduleRouter} from "./routers/scheduleRouter.js";
 
-
-import User from "./models/User.js"
-import Hall from "./models/Hall.js"
-import Show from "./models/Show.js"
-import Ticket from "./models/Ticket.js";
-import Performance from "./models/Performance.js";
-import WorkSession from "./models/WorkSession.js";
 
 mongoose.connect(
     `mongodb+srv://Udj:password1616@diplom.zlsmfxt.mongodb.net/theater`).then(
@@ -61,6 +51,12 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage
 })
+
+app.post("/upload", upload.single("image"), (req, res) => {
+    res.json({
+        url: `/uploads/${req.file.originalname}`,
+    })
+});
 
 
 
@@ -95,11 +91,6 @@ app.get("/checkAdministration", checkAdministration, (req, res) => res.json({
 
 app.use("/user", userRouter)
 
-app.post("/upload", upload.single("image"), (req, res) => {
-    res.json({
-        url: `/uploads/${req.file.originalname}`,
-    })
-});
 
 
 //hall
