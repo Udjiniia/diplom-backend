@@ -62,6 +62,7 @@ export const getPerformancesByDate = async (date) => {
 
 export const getTimeForShowByDate = async (date, showId, interval, workers, hall) => {
 
+
     const show = await Show.findById(showId)
 
     date.setHours(14)
@@ -111,6 +112,7 @@ export const getTimeForShowByDate = async (date, showId, interval, workers, hall
             freeSlots.push([busySlotsTimes[i], busySlotsTimes[i + 1]])
         }
 
+        console.log()
         for (let i = 0; i < freeSlots.length; i++) {
             let startDate = new Date(freeSlots[i][0])
             let dateEnd = new Date(freeSlots[i][0])
