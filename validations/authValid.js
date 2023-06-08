@@ -1,4 +1,5 @@
-import {body} from "express-validator"
+import {body} from "express-validator";
+
 
 export const registerValidator = [
     body("email", "Wrong email format").isEmail(),

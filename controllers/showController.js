@@ -1,5 +1,5 @@
-import {validationResult} from "express-validator";
 import {createNewShow, getShow, getShows, deleteShow, updateShowById} from "../services/showService.js";
+import {validationResult} from "express-validator";
 
 
 export const createShow = async (req, res) => {
@@ -10,9 +10,7 @@ export const createShow = async (req, res) => {
         }
 
         const show = await createNewShow(req.body.name, req.body.author, req.body.duration, req.body.description, req.body.details, req.userId, req.body.showAvatarUrl,)
-
         res.json(show);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -24,20 +22,8 @@ export const createShow = async (req, res) => {
 
 export const getAllShows = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const shows = await getShows()
-
-        if (shows.length === 0) {
-            return res.status(404).json({
-                message: "Shows list is empty"
-            })
-        }
         res.json(shows);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -49,11 +35,6 @@ export const getAllShows = async (req, res) => {
 
 export const getShowById = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const show = await getShow(req.params.id)
 
         if (!show) {
@@ -63,7 +44,6 @@ export const getShowById = async (req, res) => {
         }
 
         res.json(show);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -81,9 +61,7 @@ export const updateShow = async (req, res) => {
         }
 
         const show = await updateShowById(req.body.name, req.body.author, req.body.duration, req.body.description, req.body.details, req.body.showAvatarUrl, req.params.id)
-
         res.json(show);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -94,7 +72,8 @@ export const updateShow = async (req, res) => {
 };
 export const removeShow = async (req, res) => {
     try {
-       await deleteShow(req.params.id)
+        await deleteShow(req.params.id)
+        res.json()
     } catch (err) {
         console.log(err);
         res.status(403).json({

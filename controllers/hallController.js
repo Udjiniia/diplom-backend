@@ -1,5 +1,12 @@
+import {
+    createNewHall,
+    getHalls,
+    getHall,
+    updateHallById,
+    deleteHall,
+    getHallByUnName
+} from "../services/hallService.js";
 import {validationResult} from "express-validator";
-import {createNewHall, getHalls, getHall, updateHallById, deleteHall, getHallByUnName} from "../services/hallService.js";
 
 
 export const createHall = async (req, res) => {
@@ -8,11 +15,8 @@ export const createHall = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json(errors.array());
         }
-
         const hall = await createNewHall(req.body.name, req.body.rows, req.body.capacity, req.body.details, req.userId,)
-
         res.json(hall);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -24,20 +28,8 @@ export const createHall = async (req, res) => {
 
 export const getAllHalls = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const halls = await getHalls()
-
-        if (halls.length === 0) {
-            return res.status(404).json({
-                message: "Halls list is empty"
-            })
-        }
         res.json(halls);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -49,11 +41,6 @@ export const getAllHalls = async (req, res) => {
 
 export const getHallByName = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const hall = await getHallByUnName(req.body.name)
 
         if (!hall) {
@@ -75,11 +62,6 @@ export const getHallByName = async (req, res) => {
 
 export const getHallById = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const hall = await getHall(req.params.id)
 
         if (!hall) {
@@ -89,7 +71,6 @@ export const getHallById = async (req, res) => {
         }
 
         res.json(hall);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -107,9 +88,7 @@ export const updateHall = async (req, res) => {
         }
 
         const hall = await updateHallById(req.body.name, req.body.rows, req.body.capacity, req.body.details, req.body.status, req.params.id)
-
         res.json(hall);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -120,8 +99,8 @@ export const updateHall = async (req, res) => {
 };
 export const removeHall = async (req, res) => {
     try {
-        const resp = await deleteHall(req.params.id)
-        res.json(resp)
+        await deleteHall(req.params.id)
+        res.json()
     } catch (err) {
         console.log(err);
         res.status(403).json({

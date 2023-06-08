@@ -1,6 +1,17 @@
-import {checkAdministration, checkAuth, checkUser} from "../validations/checkAuth.js";
+import {checkAdministration, checkUser} from "../validations/checkAuth.js";
+import {
+    bookTicket,
+    buyTicket,
+    unbookTicket,
+    unbookTicketByUser,
+    getFreeTickets,
+    getPerformanceTickets,
+    unBasketTicket,
+    basketTicket,
+    getBasketTickets,
+    getUserTickets
+} from "../controllers/ticketController.js";
 import {Router} from "express";
-import {bookTicket, buyTicket, unbookTicket, unbookTicketByUser, getFreeTickets, getPerformanceTickets, unBasketTicket, basketTicket, getBasketTickets, getUserTickets} from "../controllers/ticketController.js";
 
 
 export const ticketRouter = new Router()

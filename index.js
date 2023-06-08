@@ -6,6 +6,7 @@ import cors from "cors"
 
 import {fileURLToPath} from 'url';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -24,7 +25,6 @@ import {performanceRouter} from "./routers/performanceRouter.js";
 import {hallRouter} from "./routers/hallRouter.js";
 import {employeeRouter} from "./routers/employeeRouter.js";
 import {scheduleRouter} from "./routers/scheduleRouter.js";
-
 
 mongoose.connect(
     `mongodb+srv://Udj:password1616@diplom.zlsmfxt.mongodb.net/theater`).then(
@@ -58,15 +58,13 @@ app.post("/upload", upload.single("image"), (req, res) => {
     })
 });
 
-
-
 app.use(express.static(path.join(__dirname, 'build')));
 
 
 app.get(['/', '/register', '/login', '/profile', '/update-profile', '/shows', '/halls', '/update-password',
     '/hall-create', '/employees', '/employee-create', '/show-create', '/performances', '/performance-create',
     '/all-tickets/:id', '/my-schedule', '/schedule', '/schedule-tickets', '/tickets/:id', '/basket',
-    '/tickets', '/posters', 'workers/:id'], (req, res) => {
+    '/tickets', '/posters', 'workers/:id', 'employee-schedule/:id', 'performance-reschedule/:id'], (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
@@ -89,30 +87,19 @@ app.get("/checkAdministration", checkAdministration, (req, res) => res.json({
     success: true
 }))
 
+//users
 app.use("/user", userRouter)
-
-
-
 //hall
 app.use("/hall", hallRouter)
-
 //show
 app.use("/show", showRouter)
-
 //performance + tickets
 app.use("/ticket", ticketRouter)
 app.use("/performance", performanceRouter)
-
-
 //schedule
 app.use("/schedule", scheduleRouter)
-
-//employes
+//employees
 app.use("/employee", employeeRouter)
-
-
-//users
-
 
 app.listen(process.env.PORT || 5000, (err) => {
     if (err) {

@@ -1,4 +1,4 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const TicketSchema = new mongoose.Schema({
         row: {

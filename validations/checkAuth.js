@@ -1,4 +1,5 @@
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+
 
 export const checkUser = (req, res, next) => {
     const token = (req.headers.authorization || "Empty").replace(/Bearer\s?/, "");

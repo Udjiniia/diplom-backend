@@ -1,17 +1,15 @@
 import Hall from "../models/Hall.js";
+import hall from "../models/Hall.js";
 import Performance from "../models/Performance.js";
-import WorkSession from "../models/WorkSession.js";
+import workSession from "../models/WorkSession.js";
 import {getWorkerStatusByTime} from "./workSessionService.js"
 import Show from "../models/Show.js";
-import {checkHallAvailable} from "./hallService.js";
-import hall from "../models/Hall.js";
-import User from "../models/User.js";
-import ticket from "../models/Ticket.js";
-import workSession from "../models/WorkSession.js";
+import Ticket from "../models/Ticket.js";
+import {createTickets, replaceTickets, sendReplacementEmail, getSoldTicketsForPerformance} from "./ticketService.js";
 
-export const createPerformanceWithTicketsAndSession = async (showId, hallName, time, details, userId, performanceAvatarUrl) => {
+export const createPerformanceWithTicketsAndSession = async (showId, hallId, time, details, userId, performanceAvatarUrl) => {
     const show = await Show.findOne({_id: showId})
-    const hall = await Hall.findOne({name: hallName})
+    const hall = await Hall.findOne({_id: hallId})
 
     const endTime = new Date(time)
     endTime.setHours(show.duration.getHours() + endTime.getHours())
@@ -35,9 +33,7 @@ export const createPerformanceWithTicketsAndSession = async (showId, hallName, t
         performanceWorkEndTime: workEndTime
     })
 
-    const performance = await doc.save();
-
-    return performance
+    return await doc.save()
 
 }
 export const getPerformancesByDate = async (date) => {
@@ -64,7 +60,7 @@ export const getPerformancesByDate = async (date) => {
     return schedule
 }
 
-export const getTimeForShowByDate = async (date, showId, interval, workers) => {
+export const getTimeForShowByDate = async (date, showId, interval, workers, hall) => {
 
     const show = await Show.findById(showId)
 
@@ -78,7 +74,13 @@ export const getTimeForShowByDate = async (date, showId, interval, workers) => {
     nextDay.setDate(nextDay.getDate() + 1)
     nextDay.setHours(0)
 
-    const halls = await Hall.find({status: "active"})
+    let halls = []
+    if (hall) {
+        halls.push(hall)
+    } else {
+        halls = await Hall.find({status: "active"})
+    }
+
     const performances = await Performance.find({performanceTime: {$gte: date, $lte: nextDay}})
 
     let schedule = [];
@@ -128,10 +130,10 @@ export const getTimeForShowByDate = async (date, showId, interval, workers) => {
             }
 
         }
-        schedule.push([h.name, slots])
+        schedule.push([h, slots])
     }
 
-    console.log(schedule)
+
     return schedule
 }
 
@@ -191,7 +193,6 @@ export const findPerformanceSlot = async (date, showId, interval, workers) => {
     date.setMinutes(0)
     const nextDay = new Date(date)
     nextDay.setDate(nextDay.getDate() + 1)
-    const halls = await Hall.find()
 
     const startTime = new Date(date)
     interval = new Date(`2000-01-01T00:${interval}:00.000Z`)
@@ -225,12 +226,22 @@ export const findPerformanceSlot = async (date, showId, interval, workers) => {
             }
         }
 
-    console.log(schedule)
+
     return schedule
 }
 
 
+export const createReplacementPerformance = async (oldPerformanceId, showId, hallId, time, details, userId, performanceAvatarUrl, prices) => {
+    const newPerformance = await createPerformanceWithTicketsAndSession(showId, hallId, time, details, userId, performanceAvatarUrl)
+    await createTickets(newPerformance, hallId, prices)
+    await replaceTickets(oldPerformanceId, newPerformance._id)
+    const newTickets = await getSoldTicketsForPerformance(newPerformance._id)
 
+    for(const t of newTickets){
+        await sendReplacementEmail(t.owner.email, oldPerformanceId, newPerformance._id)
+    }
+    return newPerformance
+}
 export const getPerformance = async (id) => {
     return Performance.findOne({_id: id}).populate("hall").populate("show")
 }
@@ -243,18 +254,16 @@ export const getPerformances = async () => {
 }
 
 export const deletePerformance = async (id) => {
-
-    const tickets = await ticket.find({performance: id})
+    await Performance.findOneAndDelete({
+        _id: id,
+    })
+    const tickets = await Ticket.find({performance: id})
     const sessions = await workSession.find({performance: id})
     for (const t of tickets){
-        await ticket.deleteOne(t)
+        await Ticket.deleteOne(t)
     }
     for (const s of sessions) {
         await workSession.deleteOne(s)
     }
-    await Performance.findOneAndDelete({
-        _id: id,
-    })
-    return await Performance.findById(id) == null
 
 }

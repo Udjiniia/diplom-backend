@@ -1,5 +1,6 @@
 import Show from "../models/Show.js";
 
+
 export const createNewShow = async ( name, author,duration, description, details, creator, showAvatarUrl) => {
 
     const doc = new Show({
@@ -44,24 +45,7 @@ export const updateShowById = async (name, author,duration, description, details
 }
 
 export const deleteShow = async (id) => {
-    Show.findOneAndDelete(
-        {
-            id,
-        }),
-        (err, doc) => {
-            if (err) {
-                console.log(err);
-                return {
-                    message: 'Couldn`t delete show ',
-                };
-            }
-
-            if (!doc) {
-                return {
-                    message: 'No such show',
-                };
-            }
-
-            return {success: true}
-        }
+    await Show.findOneAndDelete({
+        _id: id,
+    })
 }

@@ -4,15 +4,19 @@ import User from "../models/User.js";
 import Performance from "../models/Performance.js";
 import Hall from "../models/Hall.js";
 import Show from "../models/Show.js";
-import QRCode from "qrcode"
-import nodemailer from "nodemailer"
-import fs from "fs"
+import QRCode from "qrcode";
+import nodemailer from "nodemailer";
+import * as fs from "fs";
+import mongoose from "mongoose";
+
+
 
 String.prototype.trimLenFrom = function (start, length) {
     return this.length > length ? this.substring(start, length) : this;
 }
-export const createTickets = async (performance, hallName, priceArray) => {
-    const hall = await Hall.findOne({name: hallName})
+export const createTickets = async (performance, hallId, priceArray) => {
+
+    const hall = await Hall.findOne({_id: hallId})
     const allSeats = hall.capacity
     const rows = hall.rows
     const lastRow = allSeats % rows
@@ -118,7 +122,7 @@ export const buyTicketById = async (ticketId, userId) => {
         if (err) throw err
         await ticket.updateOne({qrUrl: `/qrcodes/${ticketId}.png`})
         console.log(`/qrcodes/${ticketId}.png`)
-        sendTicketToEmail(ticketOwner.email, ticketId, ticketData)
+        await sendTicketToEmail(ticketOwner.email, ticketId, ticketData)
     })
 
     return ticket;
@@ -150,8 +154,6 @@ const sendTicketToEmail = (email, ticketId, ticketData) => {
     };
     const transporter = nodemailer.createTransport(smtpConfig);
 
-    console.log(ticketData.time.getDate())
-    console.log(ticketData.time.getMonth())
 
     const mailOptions = {
         from: "TheaterPoshta@gmail.com",
@@ -175,11 +177,10 @@ const sendTicketToEmail = (email, ticketId, ticketData) => {
 }
 
 export const checkTicketAvailability = async (performanceCancelledId, performanceId) => {
-
     const ticketsCancelled = await Ticket.find({performance: performanceCancelledId, status: "sold"})
     const ticketsFree = await Ticket.find({performance: performanceId, status: {$in: ["free", "booked", "in basket"]}})
-
     const replaced = []
+
     for (const tC of ticketsCancelled) {
         for (const tF of ticketsFree) {
             if (tC.row === tF.row && tC.seat === tF.seat) {
@@ -191,41 +192,61 @@ export const checkTicketAvailability = async (performanceCancelledId, performanc
     return (replaced.length === ticketsCancelled.length)
 }
 
-export const checkTicketAvailabilityByShow = async (performanceId, show) => {
-    const performance = Performance.find({_id: performanceId})
-    const performances = await Performance.find({show : show, performanceTime: {$gte: performance.performanceTime}})
-
+export const checkTicketAvailabilityByShow = async (performanceId) => {
+    const performance = await Performance.findOne({_id: performanceId})
+    const show = await Show.findOne({_id: performance.show})
+    const performances = await Performance.find({
+        show: show,
+        performanceTime: {$gt: performance.performanceTime}
+    }).populate("show").populate("hall")
     const available = []
 
-    for (const p of performances){
-        if (await checkTicketAvailability(performanceId, p._id)){
+    for (const p of performances) {
+        if (await checkTicketAvailability(performanceId, p._id)) {
             available.push(p)
         }
     }
 
-    return available.populate("hall").populate("show")
+    return available
 }
 
 export const replaceTickets = async (performanceCancelledId, performanceId) => {
-    const ticketsCancelled = await Ticket.find({performance: performanceCancelledId, status: "sold"})
-    const ticketsFree = await Ticket.find({performance: performanceId, status: {$in: ["free", "booked", "in basket"]}})
+    const session = await mongoose.connection.startSession();
+    try {
+        await session.startTransaction();
+        const ticketsCancelled = await Ticket.find({performance: performanceCancelledId, status: "sold"})
+        const ticketsFree = await Ticket.find({
+            performance: performanceId,
+            status: {$in: ["free", "booked", "in basket"]}
+        })
 
-    const replaced = []
-    for (const tC of ticketsCancelled) {
-        for (const tF of ticketsFree) {
-            if (tC.row === tF.row && tC.seat === tF.seat) {
-                await tF.updateOne(
-                    {
-                        owner: tC.owner,
-                        status: "sold",
-                        qrUrl: tC.qrUrl
-                    })
-                replaced.push(tF)
+        for (const tC of ticketsCancelled) {
+            for (const tF of ticketsFree) {
+                if (tC.row === tF.row && tC.seat === tF.seat) {
+                    await Ticket.findOneAndUpdate({
+                            _id: tF._id,
+                        },
+                        {
+                            owner: tC.owner,
+                            status: "sold",
+                            qrUrl: tC.qrUrl
+                        })
+                }
             }
         }
-    }
 
-    return (replaced)
+        const replaced =  await Ticket.find({performance: performanceId, status: "sold"}).populate("owner")
+
+        for (const r of replaced) {
+            await sendReplacementEmail(r.owner.email, performanceCancelledId, performanceId)
+        }
+        await session.commitTransaction();
+        return replaced
+    } catch (error) {
+        await session.abortTransaction();
+        console.log(error);
+    }
+    await session.endSession()
 }
 
 export const sendReplacementEmail = async (email, performanceId, newPerformanceId) => {
@@ -241,14 +262,14 @@ export const sendReplacementEmail = async (email, performanceId, newPerformanceI
     const transporter = nodemailer.createTransport(smtpConfig);
 
     const performance = await Performance.findById(performanceId)
-    const newPerformance = await Performance.findById(newPerformanceId)
-    const show = await Show.findById(newPerformance.show)
+    const newPerformance = await Performance.findById(newPerformanceId).populate("show")
 
     const mailOptions = {
         from: "TheaterPoshta@gmail.com",
         to: `${email}`,
-        subject: `Переніс вистави "${show.name}"`,
-        text: `Ваш квиток на виставу "${show.name}", що повинна була відбутись відбудеться ${performance.performanceTime.getDay()}/${performance.performanceTime.getMonth()}/${performance.performanceTime.getFullYear()} o ${performance.performanceTime.getHours()}:${performance.performanceTime.getMinutes()} ПЕРЕНОСИТЬСЯ на ${newPerformance.performanceTime.getDay()}/${newPerformance.performanceTime.getMonth()}/${newPerformance.performanceTime.getFullYear()} o ${newPerformance.performanceTime.getHours()}:${newPerformance.performanceTime.getMinutes()}. Попередні квитки дійсні!`,
+        subject: `Переніс вистави "${newPerformance.show.name}"`,
+        text: `Ваш квиток на виставу "${newPerformance.show.name}", що повинна була відбутись відбудеться ${performance.performanceTime.getDate()}-${performance.performanceTime.getMonth() + 1}-${performance.performanceTime.getFullYear()} o ${performance.performanceTime.getHours()}:${performance.performanceTime.getMinutes()} 
+        ПЕРЕНОСИТЬСЯ на ${newPerformance.performanceTime.getDate()}-${newPerformance.performanceTime.getMonth() + 1}-${newPerformance.performanceTime.getFullYear()} o ${newPerformance.performanceTime.getHours()}:${newPerformance.performanceTime.getMinutes()}. Попередні квитки дійсні!`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
@@ -266,12 +287,14 @@ export const getTicketsFree = async (performanceId) => {
     return ticket.find({performance: performanceId, status: {$in: ['free', 'in basket']}}).sort({
         row: 1,
         seat: 1
-    });
+    }).populate("performance").populate({path: "performance", populate: {path: "show"}})
+        .populate({path: "performance", populate: {path: "hall"}})
 }
 
 export const getTicketsForUserBasket = async (userId) => {
 
-    return ticket.find({owner: userId, status: 'in basket'}).sort({row: 1, seat: 1});
+    return ticket.find({owner: userId, status: 'in basket'}).sort({row: 1, seat: 1}).populate("performance").populate({path: "performance", populate: {path: "show"}})
+        .populate({path: "performance", populate: {path: "hall"}})
 }
 
 export const getTicketsForUser = async (userId) => {
@@ -298,6 +321,11 @@ export const removeFromBasketTicketById = async (ticketId) => {
 
 export const getAllTicketsForPerformance = async (performanceId) => {
     return ticket.find({performance: performanceId}).sort({row: 1, seat: 1}).populate("owner")
+        .populate("performance");
+}
+
+export const getSoldTicketsForPerformance = async (performanceId) => {
+    return ticket.find({performance: performanceId, status: "sold"}).sort({row: 1, seat: 1}).populate("owner")
         .populate("performance");
 }
 

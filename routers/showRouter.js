@@ -1,7 +1,7 @@
-import {checkAdministration, checkAuth, checkUser} from "../validations/checkAuth.js";
-import {Router} from "express";
+import {checkAdministration} from "../validations/checkAuth.js";
 import {showValidator} from "../validations/showValid.js";
 import {createShow, getAllShows, getShowById, removeShow, updateShow} from "../controllers/showController.js";
+import {Router} from "express";
 
 export const showRouter = new Router()
 

@@ -1,6 +1,3 @@
-import {validationResult} from "express-validator";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import {
     createNewUser,
     getUserByEmail,
@@ -9,9 +6,11 @@ import {
     updateUserPassword,
     getEmployees,
     updateUserStatus,
-    getUser, getWorkers, getWorkersActive} from "../services/userService.js";
-
-
+    getUser, getWorkers, getWorkersActive
+} from "../services/userService.js";
+import {validationResult} from "express-validator";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 
 export const register = async (req, res) => {
@@ -59,7 +58,7 @@ export const login = async (req, res) => {
 
         const isValidPassword = await bcrypt.compare(req.body.password, user._doc.password)
 
-        if (!isValidPassword || user.status !=="active") {
+        if (!isValidPassword || user.status !== "active") {
             return res.status(404).json({
                 message: "Wrong email or password!!"
             })
@@ -110,6 +109,7 @@ export const profile = async (req, res) => {
 export const removeRrofile = async (req, res) => {
     try {
         await deleteUser(req.params.id)
+        res.json()
     } catch (err) {
         console.log(err);
         res.status(403).json({
@@ -186,7 +186,6 @@ export const updatePassword = async (req, res) => {
 export const getAllEmployees = async (req, res) => {
     try {
         const users = await getEmployees()
-
         res.json(users);
     } catch (err) {
         res.status(403).json({
@@ -198,7 +197,6 @@ export const getAllEmployees = async (req, res) => {
 export const getAllWorkers = async (req, res) => {
     try {
         const users = await getWorkers()
-
         res.json(users);
     } catch (err) {
         res.status(403).json({
@@ -210,7 +208,6 @@ export const getAllWorkers = async (req, res) => {
 export const getAllActiveWorkers = async (req, res) => {
     try {
         const users = await getWorkersActive()
-
         res.json(users);
     } catch (err) {
         res.status(403).json({
@@ -222,9 +219,7 @@ export const getAllActiveWorkers = async (req, res) => {
 export const getUserById = async (req, res) => {
     try {
         const user = await getUser(req.params.id)
-
         res.json(user);
-
     } catch (err) {
         res.status(403).json({
             message: "Couldn`t get the user",
@@ -234,16 +229,9 @@ export const getUserById = async (req, res) => {
 
 export const updateStatus = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const user = await updateUserStatus(req.params.id, req.body.status)
-
         const {password, ...userData} = user._doc;
         res.json({...userData});
-
     } catch (err) {
         console.log(err);
         res.status(500).json({

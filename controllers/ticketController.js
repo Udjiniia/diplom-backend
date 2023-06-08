@@ -1,17 +1,23 @@
-import {check, validationResult} from "express-validator";
-import {addToBasketTicketById,getAllTicketsForPerformance, unbookTicketById, bookTicketById, buyTicketById,unbookTicketForUser, getTicketsFree, getTicketsForUserBasket, getTicketsForUser, removeFromBasketTicketById} from "../services/ticketService.js"
+import {
+    addToBasketTicketById,
+    getAllTicketsForPerformance,
+    unbookTicketById,
+    bookTicketById,
+    buyTicketById,
+    unbookTicketForUser,
+    getTicketsFree,
+    getTicketsForUserBasket,
+    getTicketsForUser,
+    removeFromBasketTicketById
+} from "../services/ticketService.js"
+import {validationResult} from "express-validator";
 
 
 export const bookTicket = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const ticket = await bookTicketById(req.params.id, req.userId)
-        res.json(ticket)
 
+        res.json(ticket)
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -23,14 +29,8 @@ export const bookTicket = async (req, res) => {
 
 export const buyTicket = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const ticket = await buyTicketById(req.params.id, req.userId)
         res.json(ticket)
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -43,14 +43,8 @@ export const buyTicket = async (req, res) => {
 
 export const basketTicket = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const ticket = await addToBasketTicketById(req.params.id, req.userId)
         res.json(ticket)
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -80,15 +74,8 @@ export const unBasketTicket = async (req, res) => {
 };
 export const unbookTicket = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-        console.log(req.params.id)
-
         const ticket = await unbookTicketById(req.params.id)
         res.json(ticket);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -100,14 +87,8 @@ export const unbookTicket = async (req, res) => {
 
 export const unbookTicketByUser = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const tickets = await unbookTicketForUser(req.userId)
         res.json(tickets);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -119,14 +100,8 @@ export const unbookTicketByUser = async (req, res) => {
 
 export const getFreeTickets = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
-        const tickets= await getTicketsFree( req.params.performance)
+        const tickets = await getTicketsFree(req.params.performance)
         res.json(tickets);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -138,13 +113,8 @@ export const getFreeTickets = async (req, res) => {
 
 export const getBasketTickets = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
         const tickets = await getTicketsForUserBasket(req.userId)
         res.json(tickets);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -156,14 +126,8 @@ export const getBasketTickets = async (req, res) => {
 
 export const getUserTickets = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
-        const tickets= await getTicketsForUser( req.userId)
+        const tickets = await getTicketsForUser(req.userId)
         res.json(tickets);
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
@@ -175,14 +139,8 @@ export const getUserTickets = async (req, res) => {
 
 export const getPerformanceTickets = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-        }
-
         const tickets = await getAllTicketsForPerformance(req.params.id)
         res.json(tickets)
-
     } catch (err) {
         console.log(err);
         res.status(500).json({

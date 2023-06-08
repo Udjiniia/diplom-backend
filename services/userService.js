@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 
+
 export const createNewUser = async (email, password, role, firstName, lastName, birthday, phone, avatarUrl, status) => {
 
     const doc = new User({
@@ -56,26 +57,9 @@ export const updateUserPassword = async (id, password) => {
 }
 
 export const deleteUser = async (id) => {
-    await User.findOneAndDelete(
-        {
-            id,
-        }),
-        (err, doc) => {
-            if (err) {
-                console.log(err);
-                return {
-                    message: 'Couldn`t delete the user',
-                };
-            }
-
-            if (!doc) {
-                return {
-                    message: 'No such user',
-                };
-            }
-
-            return {success: true}
-        }
+    await User.findOneAndDelete({
+        _id: id,
+    })
 }
 
 export const getEmployees = async () => {

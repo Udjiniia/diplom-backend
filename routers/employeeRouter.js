@@ -1,7 +1,12 @@
-
-import {Router} from "express";
 import {checkAdministration, checkHead} from "../validations/checkAuth.js";
-import {getAllEmployees, getUserById, updateStatus, getAllWorkers,  getAllActiveWorkers} from "../controllers/userController.js";
+import {
+    getAllEmployees,
+    getUserById,
+    updateStatus,
+    getAllWorkers,
+    getAllActiveWorkers
+} from "../controllers/userController.js";
+import {Router} from "express";
 
 export const employeeRouter = new Router()
 

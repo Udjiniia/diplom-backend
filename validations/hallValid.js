@@ -1,5 +1,6 @@
 import {body} from "express-validator";
 
+
 export const hallValidator = [
     body("name", "Name should be min 3 characters").isLength({min: 3}),
     body("capacity", "Capacity should be min 2 characters ").isFloat({ min: 2 }),
