@@ -158,10 +158,10 @@ const sendTicketToEmail = (email, ticketId, ticketData) => {
     const mailOptions = {
         from: "TheaterPoshta@gmail.com",
         to: `${email}`,
-        subject: `Квиток на виставу "${ticketData.show}"`,
-        text: `Ваш квиток на виставу "${ticketData.show}", що відбудеться ${ticketData.time.getDate()}-${ticketData.time.getMonth() + 1}-${ticketData.time.getFullYear()}. Зала ${ticketData.hall}, ряд ${ticketData.row}, місце ${ticketData.seat}. Чекаємо на Вас!`,
+        subject: `Your ticket on "${ticketData.show} show"`,
+        text: `Your ticket on performance of "${ticketData.show}" show, that will be held on ${ticketData.time.getDate()}-${ticketData.time.getMonth() + 1}-${ticketData.time.getFullYear()}. Hall - ${ticketData.hall}, row - ${ticketData.row}, seat - ${ticketData.seat}. We're waiting for you!`,
         attachments: [{
-            filename: `${ticketData.firstname}  ${ticketData.lastname} квиток.png`,
+            filename: `${ticketData.firstname}  ${ticketData.lastname} ticket.png`,
             content: fs.createReadStream(`./qrcodes/${ticketId}.png`)
         }]
     };
@@ -267,9 +267,9 @@ export const sendReplacementEmail = async (email, performanceId, newPerformanceI
     const mailOptions = {
         from: "TheaterPoshta@gmail.com",
         to: `${email}`,
-        subject: `Переніс вистави "${newPerformance.show.name}"`,
-        text: `Ваш квиток на виставу "${newPerformance.show.name}", що повинна була відбутись відбудеться ${performance.performanceTime.getDate()}-${performance.performanceTime.getMonth() + 1}-${performance.performanceTime.getFullYear()} o ${performance.performanceTime.getHours()}:${performance.performanceTime.getMinutes()} 
-        ПЕРЕНОСИТЬСЯ на ${newPerformance.performanceTime.getDate()}-${newPerformance.performanceTime.getMonth() + 1}-${newPerformance.performanceTime.getFullYear()} o ${newPerformance.performanceTime.getHours()}:${newPerformance.performanceTime.getMinutes()}. Попередні квитки дійсні!`,
+        subject: `Reschedule "${newPerformance.show.name} show"`,
+        text: `Your performance of "${newPerformance.show.name}", which was supposed to take place on ${performance.performanceTime.getDate()}-${performance.performanceTime.getMonth() + 1}-${performance.performanceTime.getFullYear()} o ${performance.performanceTime.getHours()}:${performance.performanceTime.getMinutes()} 
+        IS RESCHEDULED on ${newPerformance.performanceTime.getDate()}-${newPerformance.performanceTime.getMonth() + 1}-${newPerformance.performanceTime.getFullYear()} o ${newPerformance.performanceTime.getHours()}:${newPerformance.performanceTime.getMinutes()}. Your original tickets are valid!`,
     };
 
     transporter.sendMail(mailOptions, function (error, info) {
