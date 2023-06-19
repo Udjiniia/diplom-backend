@@ -12,6 +12,6 @@ export const employeeRouter = new Router()
 
 employeeRouter.get("/employees", checkHead, getAllEmployees)
 employeeRouter.get("/employee/:id", checkHead, getUserById)
-employeeRouter.patch("/employee/updateStatus/:id", checkHead, updateStatus)
+employeeRouter.patch("/updateStatus/:id", checkHead, updateStatus)
 employeeRouter.get("/workers", checkAdministration, getAllWorkers)
 employeeRouter.get("/workers/active", checkAdministration, getAllActiveWorkers)

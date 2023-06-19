@@ -229,6 +229,7 @@ export const getUserById = async (req, res) => {
 
 export const updateStatus = async (req, res) => {
     try {
+        console.log(req.body.status)
         const user = await updateUserStatus(req.params.id, req.body.status)
         const {password, ...userData} = user._doc;
         res.json({...userData});

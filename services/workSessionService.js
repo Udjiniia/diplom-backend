@@ -55,14 +55,13 @@ export const getWorkerStatusByTime = async (timeStart, timeEnd, workerId) => {
     date.setHours(0)
     date.setMinutes(0)
     const schedule =  await getWorkerScheduleByDate(date, workerId)
-
     const status = []
     for (const s of schedule) {
-        if (timeStart >= s.performanceWorkTime && timeStart <= s.performanceWorkEndTime) {
+        if (timeStart >= s.performance.performanceWorkTime && timeStart <= s.performance.performanceWorkEndTime) {
             status.push(false)
-        } else if (timeEnd >= s.performanceWorkTime && timeEnd <= s.performanceWorkEndTime) {
+        } else if (timeEnd >= s.performance.performanceWorkTime && timeEnd <= s.performance.performanceWorkEndTime) {
             status.push(false)
-        } else if (timeStart <= s.performanceWorkTime && timeEnd >= s.performanceWorkEndTime) {
+        } else if (timeStart <= s.performance.performanceWorkTime && timeEnd >= s.performance.performanceWorkEndTime) {
             status.push(false)
         }
     }

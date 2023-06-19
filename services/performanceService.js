@@ -112,7 +112,6 @@ export const getTimeForShowByDate = async (date, showId, interval, workers, hall
             freeSlots.push([busySlotsTimes[i], busySlotsTimes[i + 1]])
         }
 
-        console.log()
         for (let i = 0; i < freeSlots.length; i++) {
             let startDate = new Date(freeSlots[i][0])
             let dateEnd = new Date(freeSlots[i][0])

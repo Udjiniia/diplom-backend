@@ -77,8 +77,8 @@ export const getWorkersActive = async () => {
 
 
 export const updateUserStatus = async (id, status) => {
-
-    await User.findOneAndUpdate({
+    console.log(id, status)
+    await User.updateOne({
             _id: id,
         },
         {
